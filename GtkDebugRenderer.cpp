@@ -9,12 +9,12 @@ glm::vec4 btToGlm(const btVector3 &o) {
   return glm::vec4(o.getX(), o.getY(), o.getZ(), 1.0);
 }
 
-class GtkDebugRenderer : public btIDebugDraw {
+class GLDebugRenderer : public btIDebugDraw {
 public:
 
   glm::mat4 proj;
   
-  GtkDebugRenderer() {
+  GLDebugRenderer() {
     // This one is in radians
     this->proj = glm::perspective ( 45.0f, 1.0f, 0.1f, 100.0f ) * glm::lookAt( glm::vec3(0, 0, 2), glm::vec3(0,0,0), glm::vec3(0,1,0));
   }
@@ -48,3 +48,4 @@ public:
 
   int  getDebugMode() const { return 1; }
 };
+

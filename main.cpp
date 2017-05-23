@@ -1,7 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <btBulletDynamicsCommon.h>
-#include "GtkDebugRenderer.cpp"
+#include "GLDebugRenderer.cpp"
 
 
 // TODO: use real header file
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   //dynamicsWorld->setGravity(btVector3(0,-10,0));
 
   // Initialize a debug drawer
-  GtkDebugRenderer* renderer = new GtkDebugRenderer();
+  GLDebugRenderer* renderer = new GLDebugRenderer();
   dynamicsWorld->setDebugDrawer(renderer);
 
   // Add a box to the world
