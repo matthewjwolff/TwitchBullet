@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <btBulletDynamicsCommon.h>
@@ -75,20 +76,12 @@ int main(int argc, char** argv) {
     glClearColor(0.3922, 0.5843, 0.9294, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glLineWidth(2.5);
-    glBegin(GL_LINES);
-
     //Draw the world
     //dynamicsWorld->stepSimulation(btScalar(1./60.));
-    
     dynamicsWorld->debugDrawWorld();
-    glEnd();
-
-
-
+    renderer->renderLines();
 
     // Render
-    
     glfwSwapBuffers(window);
 
     // Handle window events (dragging, resizing, closing)

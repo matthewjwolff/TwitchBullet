@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vector>
 
 #define BUFSIZE 1024
 
@@ -10,11 +11,25 @@ glm::vec4 btToGlm(const btVector3 &o) {
 }
 
 class GLDebugRenderer : public btIDebugDraw {
-public:
 
+private:
+
+  std::vector<btVector3> points;
+  std::vector<btVector3> colors;
+
+  GLuint vertarrid;
+  GLuint pointBuffer;
+  
+public:
   glm::mat4 proj;
   
   GLDebugRenderer() {
+    // Set up GL code
+    // Bind a Vertex Array Object. This will contain all the state of our scene. Not really useful, but it's required.
+    glGenVertexArrays(1, &vertarrid);
+    glBindVertexArray(vertarrid);
+    glGenBuffers(1, &pointBuffer);
+    
     // This one is in radians
     this->proj = glm::perspective ( 45.0f, 1.0f, 0.1f, 100.0f ) * glm::lookAt( glm::vec3(0, 0, 2), glm::vec3(0,0,0), glm::vec3(0,1,0));
   }
@@ -25,16 +40,44 @@ public:
     // load color and vertex data to graphics card (bind buffers)
     // glDrawArrays(GL_LINES) probably
 
+
+    // Store points in GL format
+    points.push_back(from);
+    points.push_back(to);
+    colors.push_back(color);
     // either the above or collect and copy (OpenGL >2)
     // using old opengl
 
-    glm::vec4 gFrom = proj * btToGlm(from);
-    glm::vec4 gTo = proj * btToGlm(to);
+    // glm::vec4 gFrom = proj * btToGlm(from);
+    // glm::vec4 gTo = proj * btToGlm(to);
 
-    printf("(%f, %f, %f) to (%f, %f, %f)\n\n", gFrom.x, gFrom.y, gFrom.z, gTo.x, gTo.y, gTo.z);
-    glColor3f(color.getX(), color.getY(), color.getZ());
-    glVertex3f(gFrom.x, gFrom.y, gFrom.z);
-    glVertex3f(gTo.x, gTo.y, gTo.z);
+    // printf("(%f, %f, %f) to (%f, %f, %f)\n\n", gFrom.x, gFrom.y, gFrom.z, gTo.x, gTo.y, gTo.z);
+    // glColor3f(color.getX(), color.getY(), color.getZ());
+    // glVertex3f(gFrom.x, gFrom.y, gFrom.z);
+    // glVertex3f(gTo.x, gTo.y, gTo.z);
+  }
+
+  void renderLines() {
+    // create an array of the points
+    GLfloat fpoints[points.size() * 3];
+    for(int i=0; i<points.size(); i++) {
+      fpoints[i*3] = points[i].getX();
+      fpoints[(i*3)+1] = points[i].getY();
+      fpoints[(i*3)+2] = points[i].getZ();
+    }
+    // move the points to the GPU
+    glBindBuffer(GL_ARRAY_BUFFER, pointBuffer);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float) * 3, fpoints, GL_STATIC_DRAW);
+    // enable the first array attribute in the vertex shader (the points above)
+    glEnableVertexAttribArray(0);
+    // describe the attribute above. it's an attribute with 3 floats
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    // draw
+    glDrawArrays(GL_LINES, 0, points.size() * 3);
+    // cleanup
+    glDisableVertexAttribArray(0);
+    points.clear();
+    colors.clear();
   }
 
   // unused virtual functions
