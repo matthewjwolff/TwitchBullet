@@ -30,6 +30,11 @@ int main(int argc, char** argv) {
   window = glfwCreateWindow(640, 640, "Galaxy Sim", NULL, NULL);
   glfwMakeContextCurrent(window);
 
+  if(glewInit() != GLEW_OK) {
+    printf("failed to init glew");
+    return -1;
+  }
+
   // Initialize a bullet world
   btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
   btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
