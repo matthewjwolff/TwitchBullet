@@ -1,4 +1,4 @@
-#include <bullet/LinearMath/btIDebugDraw.h>
+#include <LinearMath/btIDebugDraw.h>
 #include <stdio.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

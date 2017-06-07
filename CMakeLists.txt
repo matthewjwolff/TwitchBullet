@@ -12,4 +12,4 @@ pkg_search_module(glew glew)
 
 target_link_libraries(TwitchBullet GL glfw BulletDynamics BulletCollision LinearMath GLEW)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -I/usr/include/bullet")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")

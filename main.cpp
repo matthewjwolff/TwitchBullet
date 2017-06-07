@@ -1,7 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
-#include <btBulletDynamicsCommon.h>
+#include <BulletDynamics/btBulletDynamicsCommon.h>
 #include "GLDebugRenderer.cpp"
 
 
