@@ -51,23 +51,27 @@ int main(int argc, char** argv) {
   // Add a box to the world
 
   // create the box's model. It's a cube of half-side-length 0.5
-  btBoxShape* shape = new btBoxShape(btVector3(btScalar(0.25), btScalar(0.25), btScalar(0.25)));
+  btBoxShape* shape = new btBoxShape(btVector3(btScalar(0.5), btScalar(0.5), btScalar(0.5)));
   btScalar mass = btScalar(1);
-  // default values are provided
-  btQuaternion quat;
-  // in degrees
-  quat.setEuler(0, 45, 45);
   btTransform trans;
-  trans.setRotation(quat);
-  trans.setOrigin(btVector3(0.0,0.0,0.0));
-  btDefaultMotionState* defaultState = new btDefaultMotionState(trans);
+  trans.setIdentity();
+  trans.setOrigin(btVector3(btScalar(4.0f), btScalar(0.0f), btScalar(0.0f)));
+  btDefaultMotionState* state = new btDefaultMotionState(trans);
   //btDefaultMotionState* defaultState = new btDefaultMotionState();
 
   // create a rigidbody. using backwards compatible version because who has time to use a factory
-  btRigidBody* body = new btRigidBody(mass, defaultState, shape);
+  btRigidBody* body = new btRigidBody(mass, state, shape);
   dynamicsWorld->addRigidBody(body);
 
-  dynamicsWorld->stepSimulation(btScalar(1./60.));
+  btTransform trans2;
+  trans2.setIdentity();
+  trans2.setOrigin(btVector3(btScalar(1.0f), btScalar(0.0f), btScalar(0.0f)));
+  btBoxShape* shape2 = new btBoxShape(*shape);
+  btDefaultMotionState* state2 = new btDefaultMotionState(trans2);
+  btRigidBody* body2 = new btRigidBody(btScalar(1), state2, shape2);
+
+  dynamicsWorld->addRigidBody(body2);
+  //dynamicsWorld->stepSimulation(btScalar(1./60.));
 
   glEnable(GL_DEPTH_TEST);
   
@@ -92,5 +96,17 @@ int main(int argc, char** argv) {
     glfwPollEvents();
   }
   glfwTerminate();
+  delete body2;
+  delete body;
+  delete shape;
+  delete shape2;
+  delete state;
+  delete state2;
+  delete renderer;
+  delete dynamicsWorld;
+  delete solver;
+  delete overlappingPairCache;
+  delete dispatcher;
+  delete collisionConfiguration;
   return 0;
 }
