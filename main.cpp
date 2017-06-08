@@ -4,7 +4,6 @@
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include "GLDebugRenderer.cpp"
 
-
 // TODO: use real header file
 
 void error_callback(int error, const char* description) {

@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
+#include "shaderutils.cpp"
+
 #define BUFSIZE 1024
 
 glm::vec4 btToGlm(const btVector3 &o) {
@@ -19,6 +21,9 @@ private:
 
   GLuint vertarrid;
   GLuint pointBuffer;
+  GLuint colorBuffer;
+
+  GLuint program;
   
 public:
   glm::mat4 proj;
@@ -29,9 +34,17 @@ public:
     glGenVertexArrays(1, &vertarrid);
     glBindVertexArray(vertarrid);
     glGenBuffers(1, &pointBuffer);
-    
+    glGenBuffers(1, &colorBuffer);
+
+    this->program = LoadShaders("vertex.glsl", "fragment.glsl");
+    glUseProgram(this->program);
+
     // This one is in radians
     this->proj = glm::perspective ( 45.0f, 1.0f, 0.1f, 100.0f ) * glm::lookAt( glm::vec3(0, 0, 2), glm::vec3(0,0,0), glm::vec3(0,1,0));
+
+    // load matrix
+    glUniformMatrix4fv(glGetUniformLocation(this->program, "MVP"),1,GL_FALSE,&this->proj[0][0]);
+    
   }
   
   void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color) {
@@ -72,6 +85,18 @@ public:
     glEnableVertexAttribArray(0);
     // describe the attribute above. it's an attribute with 3 floats
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    // same for colors
+    GLfloat fcolors[colors.size() *3];
+    for(int i=0; i<colors.size(); i++) {
+        fcolors[i*3] = colors[i].getX();
+        fcolors[(i*3)+1] = colors[i].getY();
+        fcolors[(i*3)+1] = colors[i].getZ();
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float) * 3, fcolors, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(glGetAttribLocation(this->program, "color"));
+    glVertexAttribPointer(glGetAttribLocation(this->program, "color"), 3, GL_FLOAT, GL_FALSE, 0, NULL);
     // draw
     glDrawArrays(GL_LINES, 0, points.size() * 3);
     // cleanup
