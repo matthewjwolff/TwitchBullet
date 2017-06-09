@@ -24,9 +24,6 @@ private:
   GLuint colorBuffer;
 
   GLuint program;
-
-  bool printed;
-  
 public:
   glm::mat4 proj;
   
@@ -46,8 +43,6 @@ public:
 
     // load matrix
     glUniformMatrix4fv(glGetUniformLocation(this->program, "MVP"),1,GL_FALSE,&this->proj[0][0]);
-    this->printed = false;
-    
   }
   
   void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color) {
@@ -80,12 +75,6 @@ public:
       fpoints[i*3] = points[i].getX();
       fpoints[(i*3)+1] = points[i].getY();
       fpoints[(i*3)+2] = points[i].getZ();
-      if (!this->printed) {
-        if ((i%2)==0)
-          printf("(%f %f %f) - ", points[i].getX(), points[i].getY(), points[i].getZ());
-        else
-          printf("(%f %f %f)\n", points[i].getX(), points[i].getY(), points[i].getZ());
-      }
     }
     // move the points to the GPU
     glBindBuffer(GL_ARRAY_BUFFER, pointBuffer);
@@ -112,7 +101,6 @@ public:
     glDisableVertexAttribArray(0);
     points.clear();
     colors.clear();
-    this->printed=true;
   }
 
   // unused virtual functions

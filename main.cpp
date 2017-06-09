@@ -4,10 +4,27 @@
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include "GLDebugRenderer.cpp"
 
-// TODO: use real header file
-
 void error_callback(int error, const char* description) {
   printf("%d: %s", error, description);
+}
+
+// In reality, G = 6.67408e-11, but bullet physics work better when not using astronomically (literally) large and small numbers. So let's boost the gravitational constant.
+#define G 6.67408e-1f
+
+// Calculates the force vector from gravity between two rigid bodies
+// Direction from a to b ?
+btVector3 gravForce(btRigidBody* a, btRigidBody* b) {
+  float m1 = 1.0f / a->getInvMass();
+  float m2 = 1.0f / b->getInvMass();
+
+  btTransform t1, t2;
+  a->getMotionState()->getWorldTransform(t1);
+  b->getMotionState()->getWorldTransform(t2);
+  float r = t1.getOrigin().distance(t2.getOrigin());
+  float f = G * ( (m1 * m2) / (r*r) );
+
+  btVector3 direction = (t1.getOrigin()-t2.getOrigin()).normalized();
+  return direction * f;
 }
 
 int main(int argc, char** argv) {
@@ -42,7 +59,7 @@ int main(int argc, char** argv) {
 
   btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
-  //dynamicsWorld->setGravity(btVector3(0,-10,0));
+  dynamicsWorld->setGravity(btVector3(0.0f,0.0f,0.0f));
 
   // Initialize a debug drawer
   GLDebugRenderer* renderer = new GLDebugRenderer();
@@ -52,10 +69,10 @@ int main(int argc, char** argv) {
 
   // create the box's model. It's a cube of half-side-length 0.5
   btBoxShape* shape = new btBoxShape(btVector3(btScalar(0.5), btScalar(0.5), btScalar(0.5)));
-  btScalar mass = btScalar(1);
+  btScalar mass = btScalar(1000);
   btTransform trans;
   trans.setIdentity();
-  trans.setOrigin(btVector3(btScalar(4.0f), btScalar(0.0f), btScalar(0.0f)));
+  trans.setOrigin(btVector3(btScalar(0.0f), btScalar(0.0f), btScalar(0.0f)));
   btDefaultMotionState* state = new btDefaultMotionState(trans);
   //btDefaultMotionState* defaultState = new btDefaultMotionState();
 
@@ -65,16 +82,15 @@ int main(int argc, char** argv) {
 
   btTransform trans2;
   trans2.setIdentity();
-  trans2.setOrigin(btVector3(btScalar(1.0f), btScalar(0.0f), btScalar(0.0f)));
+  trans2.setOrigin(btVector3(btScalar(-5.0f), btScalar(0.0f), btScalar(0.0f)));
   btBoxShape* shape2 = new btBoxShape(*shape);
   btDefaultMotionState* state2 = new btDefaultMotionState(trans2);
   btRigidBody* body2 = new btRigidBody(btScalar(1), state2, shape2);
 
   dynamicsWorld->addRigidBody(body2);
-  //dynamicsWorld->stepSimulation(btScalar(1./60.));
 
   glEnable(GL_DEPTH_TEST);
-  
+
   while(!glfwWindowShouldClose(window)) {
     // Windows are double-buffered. Tell GLFW we're done rendering to the
     // back buffer, so switch the buffers
@@ -86,6 +102,7 @@ int main(int argc, char** argv) {
 
     //Draw the world
     //dynamicsWorld->stepSimulation(btScalar(1./60.));
+
     dynamicsWorld->debugDrawWorld();
     renderer->renderLines();
 
@@ -93,6 +110,7 @@ int main(int argc, char** argv) {
     glfwSwapBuffers(window);
 
     // Handle window events (dragging, resizing, closing)
+    dynamicsWorld->stepSimulation(1.0f/60.0f);
     glfwPollEvents();
   }
   glfwTerminate();
