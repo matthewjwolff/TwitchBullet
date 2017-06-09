@@ -23,7 +23,5 @@ Build Instructions
 ------------------
 
 1. Run CMake in the root directory (``cmake .``) to generate your system's preferred build environment.
-2. (Unix) ``make``
-2. (OSX untested) Open the generated XCode project and build
-2. (Windows untested) Open the generated Visual Studio project and build
+2. (**Unix**) ``make`` / (**OSX untested**) Open the generated XCode project and build / (**Windows untested**) Open the generated Visual Studio project and build
 3. Run the executable (``./TwitchBullet``)
