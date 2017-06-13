@@ -3,43 +3,14 @@
 #include <stdio.h>
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include "GLDebugRenderer.cpp"
+#include "bulletutils.cpp"
 
-void error_callback(int error, const char* description) {
+void glfw_error_callback(int error, const char* description) {
   printf("%d: %s", error, description);
 }
 
-// In reality, G = 6.67408e-11, but bullet physics work better when not using astronomically (literally) large and small numbers. So let's boost the gravitational constant.
-#define G 6.67408e-1f
-
-// Calculates the force vector from gravity between two rigid bodies
-// Direction from a to b ?
-btVector3 gravForce(btRigidBody* a, btRigidBody* b) {
-  float m1 = 1.0f / a->getInvMass();
-  float m2 = 1.0f / b->getInvMass();
-
-  btTransform t1, t2;
-  a->getMotionState()->getWorldTransform(t1);
-  b->getMotionState()->getWorldTransform(t2);
-  float r = t1.getOrigin().distance(t2.getOrigin());
-  float f = G * ( (m1 * m2) / (r*r) );
-
-  btVector3 direction = (t1.getOrigin()-t2.getOrigin()).normalized();
-  return direction * f;
-}
-
 int main(int argc, char** argv) {
-  // standard main method
-
-  // Strategy: use OpenGL (and possibly GLFW) to render
-  // Make a simple vertex and fragment shader with one color
-  // Initialize everything, possibly set a glClearColor
-  // register the debug drawer with the physics system
-
-  // PHYSICS LOOP
-  // glClear the screen
-  // step through the world, which will call the debug object's drawLine
-
-  glfwSetErrorCallback(error_callback);
+  glfwSetErrorCallback(glfw_error_callback);
 
   glfwInit();
   GLFWwindow* window;
@@ -78,19 +49,21 @@ int main(int argc, char** argv) {
 
   // create a rigidbody. using backwards compatible version because who has time to use a factory
   btRigidBody* body = new btRigidBody(mass, state, shape);
-  dynamicsWorld->addRigidBody(body);
-
-  btTransform trans2;
-  trans2.setIdentity();
-  trans2.setOrigin(btVector3(btScalar(-5.0f), btScalar(0.0f), btScalar(0.0f)));
-  btBoxShape* shape2 = new btBoxShape(*shape);
-  btDefaultMotionState* state2 = new btDefaultMotionState(trans2);
-  btRigidBody* body2 = new btRigidBody(btScalar(1), state2, shape2);
-
-  dynamicsWorld->addRigidBody(body2);
+  // Temporarily disabled for speed testing
+  //dynamicsWorld->addRigidBody(body);
 
   glEnable(GL_DEPTH_TEST);
+  S* a = new S(-4.0, 0, 0);
+  S* b = new S(0.0, 0, 0);
+  dynamicsWorld->addRigidBody(a->body);
+  dynamicsWorld->addRigidBody(b->body);
+  dynamicsWorld->debugDrawWorld();
+  renderer->renderLines();
 
+  float gravity = 4;
+  // Apply initial velocity, vector will be in y direction
+  a->body->setLinearVelocity(btVector3(0, 1.0, 0) * gravity);
+  
   while(!glfwWindowShouldClose(window)) {
     // Windows are double-buffered. Tell GLFW we're done rendering to the
     // back buffer, so switch the buffers
@@ -100,31 +73,33 @@ int main(int argc, char** argv) {
     glClearColor(0.3922, 0.5843, 0.9294, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    //a->body->applyCentralForce(btVector3(btScalar(0.4f), btScalar(0.0f), btScalar(0.0f)));
     //Draw the world
-    //dynamicsWorld->stepSimulation(btScalar(1./60.));
+
+    // Every timestep, apply a force toward the central body
+    btTransform central, orbiter;
+    b->body->getMotionState()->getWorldTransform(central);
+    a->body->getMotionState()->getWorldTransform(orbiter);
+
+    btVector3 toCenter = (central.getOrigin() - orbiter.getOrigin()).normalized();
+
+    a->body->applyCentralForce(toCenter * (gravity+4));
+
+    // Apply tidal force to rotate the body
+
+    // a->body->applyTorque(btVector3(0, 0, 10.0f));
+
+    dynamicsWorld->stepSimulation(btScalar(1./60.));
+    btTransform newPos;
+    a->body->getMotionState()->getWorldTransform(newPos);
+    printf("(%f %f %f)\n", newPos.getOrigin().getX(), newPos.getOrigin().getY(), newPos.getOrigin().getZ());
 
     dynamicsWorld->debugDrawWorld();
     renderer->renderLines();
 
-    // Render
     glfwSwapBuffers(window);
-
-    // Handle window events (dragging, resizing, closing)
-    dynamicsWorld->stepSimulation(1.0f/60.0f);
     glfwPollEvents();
   }
   glfwTerminate();
-  delete body2;
-  delete body;
-  delete shape;
-  delete shape2;
-  delete state;
-  delete state2;
-  delete renderer;
-  delete dynamicsWorld;
-  delete solver;
-  delete overlappingPairCache;
-  delete dispatcher;
-  delete collisionConfiguration;
   return 0;
 }

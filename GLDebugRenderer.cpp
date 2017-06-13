@@ -39,7 +39,7 @@ public:
     glUseProgram(this->program);
 
     // This one is in radians
-    this->proj = glm::perspective ( 45.0f, 1.0f, 0.1f, 100.0f ) * glm::lookAt( glm::vec3(0, 0, 12), glm::vec3(0,0,0), glm::vec3(0,1,0));
+    this->proj = glm::perspective ( 45.0f, 1.0f, 0.1f, 100.0f ) * glm::lookAt( glm::vec3(0, 0, 20), glm::vec3(0,0,0), glm::vec3(0,1,0));
 
     // load matrix
     glUniformMatrix4fv(glGetUniformLocation(this->program, "MVP"),1,GL_FALSE,&this->proj[0][0]);
