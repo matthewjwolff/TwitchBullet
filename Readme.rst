@@ -17,7 +17,7 @@ Dependencies
 - GLEW
 - GLM
 
-Use your system's package manager to install these. Ideally CMake should handle linking. If this list is out of date, consuld the root ``CMakeLists.txt``.
+Use your system's package manager to install these. Ideally CMake should handle linking. If this list is out of date, consult the root ``CMakeLists.txt``.
 
 Build Instructions
 ------------------

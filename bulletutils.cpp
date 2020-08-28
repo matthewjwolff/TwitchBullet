@@ -31,19 +31,20 @@ btVector3 gravForce(btRigidBody* a, btRigidBody* b) {
 class S {
 public:
   btRigidBody* body;
-  S(float x, float y, float z);
+  S(float x, float y, float z, float mass)
+;
 private:
   btDefaultMotionState* state;
   btBoxShape* shape;
 };
 
-S::S(float x, float y, float z) {
+S::S(float x, float y, float z, float mass) {
   btTransform trans;
   trans.setIdentity();
   trans.setOrigin(btVector3(btScalar(x), btScalar(y), btScalar(z)));
   this->state = new btDefaultMotionState(trans);
   this->shape = new btBoxShape(btVector3(btScalar(0.5f), btScalar(0.5f), btScalar(0.5f)));
-  this->body = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(btScalar(1.0f), state, shape));
+  this->body = new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(btScalar(mass), state, shape));
 }
 
 struct C : btCollisionWorld::ContactResultCallback {

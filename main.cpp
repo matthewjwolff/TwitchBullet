@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
 
   btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 
+  // disable gravity. we will be manually controlling gravity
   dynamicsWorld->setGravity(btVector3(0.0f,0.0f,0.0f));
 
   // Initialize a debug drawer
@@ -51,18 +52,30 @@ int main(int argc, char** argv) {
   btRigidBody* body = new btRigidBody(mass, state, shape);
   // Temporarily disabled for speed testing
   //dynamicsWorld->addRigidBody(body);
+  
+  float M = 100000000;
+  float m = 1;
+  float r = 10;
+  // really tiny
+  float g = .00006;
 
   glEnable(GL_DEPTH_TEST);
-  S* a = new S(-4.0, 0, 0);
-  S* b = new S(0.0, 0, 0);
+  S* a = new S(-r, 0, 0, m);
+  S* b = new S(0.0, 0, 0, M);
   dynamicsWorld->addRigidBody(a->body);
   dynamicsWorld->addRigidBody(b->body);
   dynamicsWorld->debugDrawWorld();
   renderer->renderLines();
 
-  float gravity = 4;
+  // i do not know if G=1 is an appropriate simplification
+  //or maybe we should just use calculus and figure out the correct relationship between initial velocity and force of gravity
+  float force_of_gravity = g*((M*m)/(r*r)); // G=1, it is a constant
   // Apply initial velocity, vector will be in y direction
-  a->body->setLinearVelocity(btVector3(0, 1.0, 0) * gravity);
+  // initial velocity must be sqrt(G(M+m)/r)
+  double velocity = sqrt(g*((M)/r));
+  a->body->setLinearVelocity(btVector3(0, 1.0, 0) * velocity);
+  btVector3 initV = a->body->getLinearVelocity();
+  printf("initial velocity: (%f %f %f) m=%f a=%f\n", initV.getX(), initV.getY(), initV.getZ(), initV.length(), btDegrees(tan(initV.getY()/initV.getX())));
   
   while(!glfwWindowShouldClose(window)) {
     // Windows are double-buffered. Tell GLFW we're done rendering to the
@@ -80,19 +93,28 @@ int main(int argc, char** argv) {
     btTransform central, orbiter;
     b->body->getMotionState()->getWorldTransform(central);
     a->body->getMotionState()->getWorldTransform(orbiter);
+    
+    btVector3 between = central.getOrigin() - orbiter.getOrigin();
 
-    btVector3 toCenter = (central.getOrigin() - orbiter.getOrigin()).normalized();
+    btVector3 toCenter = (between).normalized();
 
-    a->body->applyCentralForce(toCenter * (gravity+4));
+    // force is G(M*m / r). Pretty sure we can disregard little m
+    // force = mass times acceleration
+    // acceleration = velocity^2 / r
+    double accel = velocity * velocity / r;
+    double force = m * accel;
+    a->body->applyCentralForce(toCenter * force);
+    
+    btVector3 vel = a->body->getLinearVelocity();
 
     // Apply tidal force to rotate the body
 
     // a->body->applyTorque(btVector3(0, 0, 10.0f));
 
-    dynamicsWorld->stepSimulation(btScalar(1./60.));
+    dynamicsWorld->stepSimulation(btScalar(1./120.));
     btTransform newPos;
     a->body->getMotionState()->getWorldTransform(newPos);
-    printf("(%f %f %f)\n", newPos.getOrigin().getX(), newPos.getOrigin().getY(), newPos.getOrigin().getZ());
+    printf("p=(%f %f %f) d=%f; v=(%f %f %f) m=%f a=%f\n", newPos.getOrigin().getX(), newPos.getOrigin().getY(), newPos.getOrigin().getZ(), between.length(), vel.getX(), vel.getY(), vel.getZ(), vel.length(), btDegrees(tan(vel.getY() / vel.getX())));
 
     dynamicsWorld->debugDrawWorld();
     renderer->renderLines();
