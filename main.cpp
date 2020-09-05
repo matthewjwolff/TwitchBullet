@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   // Add a box to the world
 
   // create the box's model. It's a cube of half-side-length 0.5
-  btBoxShape* shape = new btBoxShape(btVector3(btScalar(0.5), btScalar(0.5), btScalar(0.5)));
+  btBoxShape* shape = new btBoxShape(btVector3(btScalar(5), btScalar(5), btScalar(5)));
   btScalar mass = btScalar(1000);
   btTransform trans;
   trans.setIdentity();
@@ -53,9 +53,12 @@ int main(int argc, char** argv) {
   // Temporarily disabled for speed testing
   //dynamicsWorld->addRigidBody(body);
   
+  // i'm pretty sure orbits aren't stable because of rounding issues
+  // because we are dealing with finite precision floats
+  // if we tweak the numbers enough, the error should be minimal
   float M = 100000000;
   float m = 1;
-  float r = 10;
+  float r = 30;
   // really tiny
   float g = .00006;
 
@@ -98,9 +101,11 @@ int main(int argc, char** argv) {
 
     btVector3 toCenter = (between).normalized();
 
-    // force is G(M*m / r). Pretty sure we can disregard little m
+    // force is G(M*m / r)
     // force = mass times acceleration
     // acceleration = velocity^2 / r
+    // we cannot disregard little m; it is acceleration that is constant, not force
+    // a larger object needs a larger force to have the same acceleration as a smaller object
     double accel = velocity * velocity / r;
     double force = m * accel;
     a->body->applyCentralForce(toCenter * force);
@@ -114,7 +119,7 @@ int main(int argc, char** argv) {
     dynamicsWorld->stepSimulation(btScalar(1./120.));
     btTransform newPos;
     a->body->getMotionState()->getWorldTransform(newPos);
-    printf("p=(%f %f %f) d=%f; v=(%f %f %f) m=%f a=%f\n", newPos.getOrigin().getX(), newPos.getOrigin().getY(), newPos.getOrigin().getZ(), between.length(), vel.getX(), vel.getY(), vel.getZ(), vel.length(), btDegrees(tan(vel.getY() / vel.getX())));
+    printf("p=(%f %f %f) r=%f d=%f; v=(%f %f %f) m=%f a=%f\n", newPos.getOrigin().getX(), newPos.getOrigin().getY(), newPos.getOrigin().getZ(), between.length(), between.length()-r, vel.getX(), vel.getY(), vel.getZ(), vel.length(), btDegrees(tan(vel.getY() / vel.getX())));
 
     dynamicsWorld->debugDrawWorld();
     renderer->renderLines();
